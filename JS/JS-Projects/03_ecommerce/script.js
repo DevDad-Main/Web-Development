@@ -77,6 +77,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } else {
       emptyCartMessage.classList.remove("hidden");
+      totalPriceDisplay.textContent = `$0.00`;
     }
   }
+
+  checkoutButton.addEventListener("click", () => {
+    cart.length = 0;
+    alert("Checked out successfully");
+    renderCart();
+  });
 });
