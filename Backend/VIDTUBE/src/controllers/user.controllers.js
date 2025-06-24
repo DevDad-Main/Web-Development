@@ -6,6 +6,7 @@ import {
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { jwt } from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -163,6 +164,98 @@ const loginUser = asyncHandler(async (req, res) => {
 
   //NOTE: Validate the password
   const isPasswordValid = await user.isPasswordValid(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(400, "Invalid Credentials");
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id
+  );
+
+  const loggedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
+
+  const options = {
+    httpOnly: true,
+    //NOTE: Handy for development process but the variable gets set dynamically depending on it's state
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  return (
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      //NOTE: Refresh token is only normally set in the cookie
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { user: loggedInUser, accessToken, refreshToken },
+          "User logged in successfully"
+        )
+      )
+  );
 });
 
-export { registerUser, generateAccessAndRefreshToken };
+const logoutUser = asyncHandler(async (req, res) => {
+  await User
+    .findByIdAndUpdate
+    //NOTE: Need to come back here after sorting out our middleware, as we wont know how to find the user
+    // req.user._id
+    ();
+});
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  //NOTE: This will be stored in our cookies, but could also potentially come from our body aswell
+  //NOTE: If it's a mobile app then it will be coming from the body as apps dont have cookies
+  const { incomingRefreshToken } =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    //NOTE: If this token can be decoded, then we have acces to the information of the _id.
+    //NOTE: This might not always return an id so we add the ?. null check
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    //NOTE: we got here now we are sure that everything is good and passed checks
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, "Refresh token is expired");
+    }
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshToken(user._id);
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access token refreshed successfully"
+        )
+      );
+  } catch (error) {}
+});
+
+export { registerUser, loginUser, refreshAccessToken };
