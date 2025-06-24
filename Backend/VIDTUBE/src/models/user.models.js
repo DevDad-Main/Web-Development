@@ -62,7 +62,7 @@ userSchema.pre("save", async function (next) {
   //NOTE: If the password is not the thing being modified then we move onto the next middleware etc
   //NOTE: This ensures we are not always modified or updating the password when we don't need to or doing something else
   //NOTE: Also the first time we store this password we are not modifying an exisiting field, so this will never run
-  if (!this.modified("password")) return next();
+  if (!this.isModified("password")) return next();
 
   //NOTE: Using bycrypt to has this password and salt it with 10 rounds
   this.password = bcrypt.hash(this.password, 10);

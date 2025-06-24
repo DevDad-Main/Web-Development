@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import healthCheckRouter from "./routes/healthCheck.routes.js";
 import cookieParser from "cookie-parser";
-import { userRouter } from "./routes/user.routes.js";
+import userRouter from "./routes/user.routes.js";
 import { errorHandler } from "./middlewares/error.middlewares.js";
 
 const app = express();
