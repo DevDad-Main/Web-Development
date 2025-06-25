@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controllers.js";
+import { registerUser, logoutUser } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 
 //NOTE:   Using router modules in Express is all about:
 
@@ -33,4 +34,7 @@ router.route("/register").post(
   registerUser
 );
 
+//NOTE: Secured routes
+//NOTE: Once we have verified with the JWT, then we call next() in our middleware which will pass over control to our logoutUser
+router.route("logout").post(verifyJWT, logoutUser);
 export default router;

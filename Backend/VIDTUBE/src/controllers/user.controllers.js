@@ -218,7 +218,16 @@ const logoutUser = asyncHandler(async (req, res) => {
     secure: process.env.NODE_ENV === "production",
   };
 
-  return res.status(200);
+  return (
+    res
+      .status(200)
+      //NOTE: Using a method called .clearCookie allowing us to clear the cookies one by one
+      .clearCookie("accessToken", options)
+      //NOTE: Using a method called .clearCookie allowing us to clear the cookies one by one
+      .clearCookie("refreshToken", options)
+      //NOTE: Here we just send the default 200 resonse
+      .json(new ApiResponse(200, "Logout successful"))
+  );
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -272,4 +281,4 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (error) {}
 });
 
-export { registerUser, loginUser, refreshAccessToken };
+export { registerUser, loginUser, refreshAccessToken, logoutUser };
