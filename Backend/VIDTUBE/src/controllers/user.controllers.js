@@ -7,6 +7,7 @@ import {
 } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { jwt } from "jsonwebtoken";
+import { set } from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -200,11 +201,24 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
-  await User
-    .findByIdAndUpdate
-    //NOTE: Need to come back here after sorting out our middleware, as we wont know how to find the user
-    // req.user._id
-    ();
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      //NOTE: Allows us to set and change any property, in this case it will be the refresh token
+      $set: {
+        refreshToken: undefined, // NOTE: Depending on the MongoDB version, we can use "" empty string or null or undefined
+      },
+    },
+
+    { new: true } //NOTE: Returns us the updated user
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  return res.status(200);
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
