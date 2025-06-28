@@ -3,14 +3,13 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const adminData = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
-const expressHbs = require("express-handlebars");
 
 const app = express();
 const PORT = 3000;
 
-app.engine("hbs", expressHbs());
-
-app.set("view engine", "hbs");
+app.set("view engine", "ejs");
+// This is not neccessary as the default location express looks for is.
+// cwd, current working directory + the /views/ folder
 app.set("views", "views");
 
 app.use(bodyParser.urlencoded({ extended: false }));
