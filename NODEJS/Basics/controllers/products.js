@@ -1,4 +1,4 @@
-const products = [];
+const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
   // This wont't specifically move onto the next middleware.
@@ -18,16 +18,15 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-  products.push({ title: req.body.title });
+  // Creating our class product here so we can define new products whenver the admin makes one
+  const product = new Product(req.body.title);
+  product.save();
   res.redirect("/");
 };
 
 exports.getProducts = (req, res, next) => {
-  console.log("Shop.js: ", adminData.products);
-  // res.sendFile(path.join(rootDir, "views", "shop.html"));
-
-  // So we are only rendering the template below, so we can now grab
-  // The product data from our other routes and then pass it into render.
+  const products = Product.fetchAll();
+  console.log("Shop.js: ", products);
 
   // We dont need to specify the path as express.set() will automatically use the cwd + views.
   // Then render returns the default tempalting engine and we have specified that pug will be the new default.

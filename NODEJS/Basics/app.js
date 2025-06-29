@@ -3,7 +3,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
-const errorController = require("./routes/404");
+const errorController = require("./controllers/404");
 
 const app = express();
 const PORT = 3000;
